@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+		<http:request-config name="CNB_System_API_HTTP_Request" doc:name="HTTP Request configuration" doc:id="bf7d7a93-cf33-4b5b-bba9-c67e3ba8a98e" basePath="${cnbSystemAPI.basePath}" responseTimeout="${cnbSystemAPI.responseTimeout}" sendCorrelationId="ALWAYS">
+		<http:request-connection protocol="HTTPS" host="${cnbSystemAPI.host}" port="${cnbSystemAPI.port}">
+			<reconnection >
+				<reconnect frequency="${cnbSystemAPI.reconnection.frequency}" count="${cnbSystemAPI.reconnection.attempts}"/>
+			</reconnection>
+		</http:request-connection>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${secure::cnbContractsBatch.clientId}" />
+			<http:default-header key="client_secret" value="${secure::cnbContractsBatch.clientSecret}" />
+		</http:default-headers>
+	
+</http:request-config>
+	<http:request-config name="Service_Contract_PAPI_HTTP_Request" doc:name="HTTP Request configuration" doc:id="d31449f5-2710-4d98-8573-e55e35f1e003" basePath="${serviceContractsPAPI.basePath}" responseTimeout="${serviceContractsPAPI.responseTimeout}" sendCorrelationId="ALWAYS">
+		<http:request-connection protocol="HTTPS" host="${serviceContractsPAPI.host}" port="${serviceContractsPAPI.port}">
+			<reconnection >
+				<reconnect frequency="${serviceContractsPAPI.reconnection.frequency}" count="${serviceContractsPAPI.reconnection.attempts}"/>
+			</reconnection>
+		</http:request-connection>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${secure::cnbContractsBatch.clientId}" />
+			<http:default-header key="client_secret" value="${secure::cnbContractsBatch.clientSecret}" />
+		</http:default-headers>
+	
+</http:request-config>
+	<global-property doc:name="Global Property" doc:id="55cd7632-2b84-41d4-96db-8e4e3747f49f" name="mule.env" value="uat" />
+	<global-property doc:name="Global Property" doc:id="52ce340c-3633-4ccf-bbfa-3422d47dcd8d" name="mule.encryption.key" value="AccessGroup12345" />
+	<configuration-properties doc:name="Configuration properties" doc:id="2cf5b59e-7e38-43b4-af0a-99d3d47a3d20" file="properties\common-properties.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="339326b0-5a5c-4b15-860c-fb2ab811d208" file="properties/${mule.env}-properties.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0cee177a-efc6-4a59-ad07-1665f395e248" file="properties/${mule.env}-secure-properties.yaml" key="${mule.encryption.key}" />
+		<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="8f503ad4-2286-40f4-b9ca-93a08c0bc7ed" />
+	<os:object-store name="TimeStamp_OS" doc:name="Object store" doc:id="36454171-23c2-48e5-9a3b-aa5c8396e2b9" maxEntries="100" entryTtl="299" expirationInterval="299" config-ref="ObjectStore_Config" expirationIntervalUnit="SECONDS"/>
+	<json-logger:config name="JSON_Logger_Config_cnb" doc:name="JSON Logger Config" doc:id="7c89719a-079d-411e-b3c4-07fea08fb223" environment="${mule.env}" applicationName="${cnb.application.name}" applicationVersion="${cnb.application.version}"/>
+
+		<db:config name="Stock_Codes_Database_Config" doc:name="Database Config" doc:id="5d0a34a8-db5f-4e7b-8c4e-661c45d244a7" >
+		<db:mssql-connection host="${stockCodesDB.host}" user="${secure::stockCodesDB.username}" password="${secure::stockCodesDB.password}" databaseName="${stockCodesDB.databaseName}" port="${stockCodesDB.port}">
+			<reconnection >
+				<reconnect frequency="${stockCodesDB.reconnection.frequency}" count="${stockCodesDB.reconnection.attempts}" />
+			</reconnection>
+			<db:pooling-profile maxPoolSize="${stockCodesDB.connection.pooling.maxPoolSize}" minPoolSize="${stockCodesDB.connection.pooling.minPoolSize}" />
+		</db:mssql-connection>
+	</db:config>
+	
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3f72b09e-1c33-4a45-9eb9-ac8c6e2f9381" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="SFDC_Service_Contracts_API_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="86ab3236-6a30-437b-a46f-b66f21667f6f" basePath="${sfdcServiceContractAPI.basePath}" sendCorrelationId="ALWAYS" responseTimeout="${sfdcServiceContractAPI.responseTimeout}">
+		<http:request-connection host="${sfdcServiceContractAPI.host}" port="${sfdcServiceContractAPI.port}" protocol="HTTPS" usePersistentConnections="false">
+			<reconnection >
+				<reconnect frequency="${sfdcServiceContractAPI.reconnection.frequency}" count="${sfdcServiceContractAPI.reconnection.attempts}" />
+			</reconnection>
+		</http:request-connection>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${secure::stockCodesBatch.clientId}" />
+			<http:default-header key="client_secret" value="${secure::stockCodesBatch.clientSecret}" />
+		</http:default-headers>
+	</http:request-config>
+	<http:request-config name="SFDC_Error_Hoaspital" doc:name="HTTP Request configuration" doc:id="0c06d518-0e0b-42ec-945c-25307e7ef1ea" basePath="${sfdcerrorHospitalAPI.basePath}" responseTimeout="${sfdcerrorHospitalAPI.responseTimeout}" sendCorrelationId="ALWAYS">
+		<http:request-connection host="${sfdcerrorHospitalAPI.host}" port="${sfdcerrorHospitalAPI.port}" protocol="HTTPS">
+			<reconnection >
+				<reconnect frequency="${sfdcerrorHospitalAPI.reconnection.frequency}" count="${sfdcerrorHospitalAPI.reconnection.attempts}"/>
+			</reconnection>
+		</http:request-connection>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${secure::stockCodesBatch.clientId}" />
+			<http:default-header key="client_secret" value="${secure::stockCodesBatch.clientSecret}" />
+		</http:default-headers>
+	</http:request-config>
+		<http:request-config name="SFDC_Error_Hoaspital_CNB" doc:name="HTTP Request configuration" doc:id="ccb5bbe4-aea1-4f0c-bc5d-6c0439e99097" basePath="${sfdcerrorHospitalAPI.basePath}" responseTimeout="${sfdcerrorHospitalAPI.responseTimeout}" sendCorrelationId="ALWAYS">
+		<http:request-connection host="${sfdcerrorHospitalAPI.host}" port="${sfdcerrorHospitalAPI.port}" protocol="HTTPS">
+			<reconnection >
+				<reconnect frequency="${sfdcerrorHospitalAPI.reconnection.frequency}" count="${sfdcerrorHospitalAPI.reconnection.attempts}"/>
+			</reconnection>
+		</http:request-connection>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${secure::cnbContractsBatch.clientId}" />
+			<http:default-header key="client_secret" value="${secure::cnbContractsBatch.clientSecret}" />
+		</http:default-headers>
+	</http:request-config>
+		<http:request-config name="Call_Get_Contract_Lines_Request" doc:name="HTTP Request configuration" doc:id="f299d031-8a4a-4f0d-8349-855bed395a2c" basePath="/api" >
+		<http:request-connection host="cnb-contracts-sapi-dev-qzg5c3.pa977o.gbr-e1.cloudhub.io" protocol="HTTPS"/>
+	</http:request-config>
+	<json-logger:config name="JSON_Logger_Config_StockCode" doc:name="JSON Logger Config" doc:id="12db2f32-304a-450c-8d66-114b76510a0e" applicationName="${stockCode.application.name}" applicationVersion="${stockCode.application.version}" environment="${mule.env}"/>
+</mule>

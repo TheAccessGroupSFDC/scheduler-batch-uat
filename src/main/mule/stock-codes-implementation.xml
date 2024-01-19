@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<sub-flow name="process-stock-codes-subflow" doc:id="9d02f9e4-9e3b-42cb-ba71-c3bc8505e25c" >
+		<json-logger:logger doc:name="Entry Logger" doc:id="f68fa6b7-fdc5-48f1-a566-bd4c0efc567d" config-ref="JSON_Logger_Config_StockCode" message="Started to process Stock Codes Batch Job">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<set-variable value="#[now()]" doc:name="startTime" doc:id="6802e6fe-3bc5-4d14-9af4-132d8a9de0e4" variableName="startTime"/>
+		<set-variable value="${stockCodesBatch.batchSize}" doc:name="Limit" doc:id="1017e13c-0bd8-445e-81f6-ccabe13a7a62" variableName="limit" />
+		<json-logger:logger doc:name="Logger" doc:id="418cb899-aef5-41d1-a6e3-ee9236f4a4ab" config-ref="JSON_Logger_Config_StockCode" message='#["Initalized Limit: " ++ vars.limit]' tracePoint="FLOW">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<until-successful maxRetries="${stockCodesDB.untilSucessful.maxRetry}" doc:name="Until Successful" doc:id="aa34c970-f71a-48aa-b950-779151116043" millisBetweenRetries="${stockCodesDB.untilSucessful.retryTime}">
+			<db:select doc:name="Getting Count" doc:id="4c410e9c-6146-4742-8c07-3bf0eacbd31a" config-ref="Stock_Codes_Database_Config" target="recordCount">
+			<db:sql><![CDATA[SELECT COUNT(stkCode) as count
+FROM Accounts.dbo.UDEF_FINANCE_STKLINK]]></db:sql>
+		</db:select>
+		</until-successful>
+		<set-variable value="#[vars.recordCount[0][0] as Number]" doc:name="Set Variable totalRecords" doc:id="2d53872c-b1c6-4cdb-a006-7cc938515e8c" variableName="totalRecords"/>
+		<json-logger:logger doc:name="Logger" doc:id="15a768a6-a4b4-4bc6-a4b5-c956ae2a9ed9" config-ref="JSON_Logger_Config_StockCode" message='#["Retrieved count from database, count: " ++ vars.totalRecords]' tracePoint="AFTER_REQUEST" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<ee:transform doc:name="Transform Message" doc:id="4841ae7b-05fd-4c7f-b36e-b9cb8cb42e82">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var limit = vars.limit as Number
+var rowCount = vars.totalRecords
+var maxSize = ceil(rowCount/limit)
+---
+if(rowCount > limit)  
+    0 to maxSize map { offset: $ * limit, limit: limit}
+else
+    { offset: 0,  limit: limit }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="be66fa12-90f3-468c-95ec-0fa10d48dcb0" collection="#[payload]" maxConcurrency="${stockCodesBatch.concurrency}">
+		
+			<try doc:name="Try" doc:id="1ced8d4a-0310-4da3-ac78-29d754491097">
+				<set-variable value="#[payload]" doc:name="Set Variable initialPayload" doc:id="a3829e47-2fc5-42e1-9196-8f23150fdc41" variableName="initialPayload" />
+				<json-logger:logger doc:name="Logger" doc:id="9d3193b3-92e8-46c6-90f2-05230a6f18fd" config-ref="JSON_Logger_Config_StockCode" message='#["Retrieving data from Database for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' tracePoint="BEFORE_REQUEST">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<until-successful maxRetries="${stockCodesDB.untilSucessful.maxRetry}" doc:name="Until Successful" doc:id="c61db671-dbee-4004-bd05-e5c691fc44ac" millisBetweenRetries="${stockCodesDB.untilSucessful.retryTime}">
+					<db:select doc:name="Query Dimension DB" doc:id="5b8ab039-b761-490d-9de0-ac44d43c4b80" config-ref="Stock_Codes_Database_Config" target="queryResponse">
+				<db:sql><![CDATA[select 
+stkCode,
+stkCode stockID,
+Product_Code productNumber,
+left(STK_SK1, 10) planProductNumber,
+STK_SK,
+STK_SK2 planType,
+STK_SK3 planLevel,
+Inactive,
+stkname,
+Deployment_Code,
+Deployment_Name,
+Division_Code,
+Division_Name,
+DoNotUse,
+ExcludeinCSP,
+Investment_Code,
+Investment_Name,
+Nominal_Code,
+Nominal_Name,
+Product_Dev_Code,
+Product_Dev_Name,
+Product_Name,
+Region,
+Renewal_Hold_Code,
+Renewal_Hold_Name,
+StkPrimary,
+StkType,
+StkProduct_Name,
+SubDivision_Code,
+SubDivision_Name
+from Accounts.dbo.UDEF_FINANCE_STKLINK
+ORDER BY stkname ASC
+OFFSET :offseValue ROWs
+FETCH FIRST :limitValue ROWS ONLY]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+ offseValue : vars.initialPayload.offset as Number,
+ limitValue : vars.initialPayload.limit as Number
+}]]]></db:input-parameters>
+			</db:select>
+				
+</until-successful>
+				<set-variable value="#[sizeOf(vars.queryResponse)]" doc:name="Set Variable batchSizeInLoop" doc:id="c28f470e-e1b6-4f06-bdf0-015f50336b41" variableName="batchSizeInLoop"/>
+				<json-logger:logger doc:name="Logger" doc:id="b03a4733-c4ef-4977-9663-cf625de97d8e" config-ref="JSON_Logger_Config_StockCode" message='#["Successfully retrieved data from Database for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' tracePoint="AFTER_REQUEST">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<ee:transform doc:name="Transform Message" doc:id="c2af2213-37aa-48e8-82f4-a590c0def8c8">
+					<ee:message>
+						<ee:set-payload><![CDATA[output application/json skipNullOn="everywhere"
+%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+vars.queryResponse map ((item, index) ->{ 
+  "code": item.stkCode,
+  "codeUID": item.stockID,
+  "productCode": item.productNumber  ,
+  "planProductNumber": item.planProductNumber ,
+  "stksk": item.STK_SK,
+  "planType": capitalize(item.planType) ,
+  "panLevel": capitalize(item.planLevel) ,
+  "inactive": if(item.Inactive == 1) true else false ,
+  "name": item.stkname,
+  "deploymentCode": item.Deployment_Code ,
+  "deploymentName": item.Deployment_Name ,
+  "divisionCode": item.Division_Code ,
+  "divisionName": item.Division_Name ,
+  "doNotUse": if(item.DoNotUse == 1) true else false ,
+  "excludeInCSP": if(item.ExcludeinCSP == 1) true else false ,
+  "investmentCode": item.Investment_Code ,
+  "investmentName": item.Investment_Name ,
+  "nominalCode": item.Nominal_Code ,
+  "nominalName": item.Nominal_Name ,
+  "productDevCode": item.Product_Dev_Code ,
+  "productDevName": item.Product_Dev_Name ,
+  "productName": item.Product_Name ,
+  "region": item.Region,
+  "renewalHoldCode": item.Renewal_Hold_Code,
+  "renewalHoldName": item.Renewal_Hold_Name,
+  "stockPrimary": item.StkPrimary as String ,
+  "stockType": item.StkType,
+  "stockProductName": item.StkProduct_Name,
+  "subDivisionCode": item.SubDivision_Code,
+  "subDivisionName": item.SubDivision_Name 
+} )]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<json-logger:logger doc:name="Logger" doc:id="c77801f2-f7fc-410a-a1a7-75ecb1525c78" config-ref="JSON_Logger_Config_StockCode" message='#["Invoking Salesforce Service Contract API for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' tracePoint="BEFORE_REQUEST" >
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<choice doc:name="Checking Null Payload" doc:id="3be34402-f450-40ac-a677-bd426afb9cc1" >
+					<when expression="#[isEmpty(payload)== false]">
+						<until-successful maxRetries="${sfdcServiceContractAPI.untilSucessful.maxRetry}" doc:name="Until Successful" doc:id="17fdea89-1186-402b-a162-c156fb31fe03" millisBetweenRetries="${sfdcServiceContractAPI.untilSucessful.retryTime}">
+							<http:request method="PATCH" doc:name="Call Service Contract Line API" doc:id="cd7600fe-83dc-496e-9444-7bfed17826e3" config-ref="SFDC_Service_Contracts_API_HTTP_Request_configuration" path="${sfdcServiceContractAPI.resources.stockCodes}" target="serviceContractResponse" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" responseTimeout="${sfdcServiceContractAPI.responseTimeout}">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"stockCode" : "payload.code",
+	"client_secret" : "C424EE5EC1E0CDA1B797B117D7F2ABFFD52B9E279F94AE94A1C7D7C0EB5409E9",
+	"client_id" : "3MVG9buXpECUESHig223CiikbBdDM0zQG2d7Z1XGpHk9MlYmDBrdAiPEsM7LFI8uocFcm0UCX8ohnESU8q8vz"
+}]]]></http:query-params>
+				</http:request>
+				</until-successful>
+
+						<json-logger:logger doc:name="Logger" doc:id="ab3ec6c0-6dde-4715-908c-1febdf88d022" config-ref="JSON_Logger_Config_StockCode" message='#["Successfully invoked Salesforce Service Contract API for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' tracePoint="AFTER_REQUEST">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(vars.serviceContractResponse) 
+
+}]]]></json-logger:content>
+				</json-logger:logger>
+						<choice doc:name="Check Successful Responds" doc:id="72e9dff0-22c9-4370-bc22-08e2b5c9c1c5">
+					<when expression="#[vars.serviceContractResponse.errorCount &gt; 0]">
+						<json-logger:logger doc:name="Logger" doc:id="46cd9f46-56bf-4251-9221-817cac14612f" config-ref="JSON_Logger_Config_StockCode" message='#["Successfully updated Salesforce Service Contracts with errors for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' >
+								</json-logger:logger>
+						<ee:transform doc:name="Transform Message" doc:id="05cd5869-6f03-45b9-af7b-20627f3859b1">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+[{
+  "dataFlow": "stock-codes-batch",
+  "errorText": ("Stock Code Updated With Errors on Query with " ++ ", Offset:" ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit ) as String,
+  "errorDetails": "Exceptions happened with the Fields",
+  "payload": write(vars.serviceContractResponse.errorItems, "application/json") as String,
+  "retryCount": 0,
+  "retryFlag": false,
+  "sourceSystem": "Dimension",
+  "status": "Retry",
+  "targetSystem": "Salesforce"
+}]
+]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+								<json-logger:logger doc:name="Logger" doc:id="f64c5761-a01d-4cae-a6c9-bb4b2b933ea0" config-ref="JSON_Logger_Config_StockCode" message='#["SAPI Responds Error " ++ (vars.initialPayload.offset as String ++ " Limit: " ++ vars.initialPayload.limit as String)]'>
+								</json-logger:logger>
+								<flow-ref doc:name="SAPI Responds Error invoke-error-hospital-impl-subflow" doc:id="a24338ea-cb97-4363-bdd1-ed28938cdc44" name='invoke-error-hospital-impl-subflow' />
+					
+</when>
+							<otherwise>
+						<json-logger:logger doc:name="Logger" doc:id="578bb531-b751-4ab9-8423-037037994f45" config-ref="JSON_Logger_Config_StockCode" message='#["Successfully updated Salesforce Service Contracts without any errors for Offset: " ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit]' >
+									<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+								</json-logger:logger>
+					</otherwise>
+				</choice>
+					</when>
+					<otherwise >
+						<json-logger:logger doc:name="Null Payload" doc:id="687a376d-09f1-4164-8df8-ff0cf736151c" config-ref="JSON_Logger_Config_StockCode" message="Null Payload">
+						</json-logger:logger>
+					</otherwise>
+				</choice>
+				<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="85cb7e38-aa80-4b24-ada9-d319181cd4d5">
+						<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" doc:name="failures" doc:id="9bb14dba-eb74-40a9-8826-5e303d3bfb2a" variableName="failures" />
+
+						<ee:transform doc:name="Transform Message" doc:id="3613c294-d59d-4235-ac42-f5a031de3a43">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+---
+[{
+  "dataFlow": "stock-codes-batch",
+  "errorText": ("Error Text :" ++ error.errorType.asString as String ++ ", Offset:" ++ vars.initialPayload.offset ++ " Limit: " ++ vars.initialPayload.limit ) as String,
+  "errorDetails": error.description,
+  "payload": "select stkCode,stkCode stockID,Product_Code productNumber,left(STK_SK1, 10) planProductNumber,STK_SK,STK_SK2 planType,STK_SK3 planLevel,Inactive,stkname,Deployment_Code,Deployment_Name,Division_Code,Division_Name,DoNotUse,ExcludeinCSP,Investment_Code,Investment_Name,Nominal_Code,Nominal_Name,Product_Dev_Code,Product_Dev_Name,Product_Name,Region,Renewal_Hold_Code,Renewal_Hold_Name,StkPrimary,StkType,StkProduct_Name,SubDivision_Code,SubDivision_Name from Accounts.dbo.UDEF_FINANCE_STKLINK ORDER BY stkname ASC OFFSET :" ++ vars.initialPayload.offset ++ " ROWs FETCH FIRST :" ++ vars.initialPayload.limit ++ " ROWS ONLY" as String,
+  "retryCount": 0,
+  "retryFlag": false,
+  "sourceSystem": "Dimension",
+  "status": "Retry",
+  "targetSystem": "Salesforce"
+}]
+]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+
+						<json-logger:logger doc:name="Logger" doc:id="7a165df5-ffee-41ee-9a2e-e578a11e3799" config-ref="JSON_Logger_Config_StockCode" message='#["On Error Continue error " ++ (vars.initialPayload.offset as String ++ " Limit: " ++ vars.initialPayload.limit as String)]'>
+							<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+						</json-logger:logger>
+						<flow-ref doc:name="On Error Continue  invoke-error-hospital-impl-subflow" doc:id="a395dc1a-a549-4c9f-9f05-31ae154cf7f5" name="invoke-error-hospital-impl-subflow"/>
+
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Message" doc:id="e0cc81e0-9e87-49c4-bf20-97e9107b042c" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="batchStatus" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	startTime: vars.startTime,
+	endTime: now(),
+	executionTime: now() - vars.startTime,
+	totalRecordsCount: vars.totalRecords,
+	batchSize: vars.limit
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="e0709707-99da-4598-a132-dc398eadd16c" config-ref="JSON_Logger_Config_StockCode" message='#["Successfully processed Stock Codes Batch Job"]' tracePoint="END">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(vars.batchStatus) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow></mule>

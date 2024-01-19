@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+		<flow name="cnb-contracts-batch-Schedule" doc:id="9f37ca7f-d91a-47fd-b694-5b29b53006aa">
+		<scheduler doc:name="Service Contracts Batch Scheduler" doc:id="b19483f2-034c-4a94-ab44-44a6b066069a" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="${cnbContractsBatch.serviceContracts.frequency}" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="Flow Reference batch-cnb-get-contracts" doc:id="5c1d039d-e8c5-462b-9dd5-ca77bf9914d7" name="batch-cnb-get-contracts" />
+	</flow>
+		<flow name="stock-codes-batch-scheduler-subflow" doc:id="c48342d2-e539-4a1a-ad9b-24d8b352d9cc" >
+		<scheduler doc:name="Scheduler" doc:id="e3b7a5fe-5ebf-4f20-8db9-9b977e14c752" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="${stockCodesBatch.scheduler.frequency}" timeUnit="MINUTES" startDelay="${stockCodesBatch.scheduler.startDelay}"/>
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="Flow Reference process-stock-codes-subflow" doc:id="cd5c4e33-7bd4-4f15-bbe9-4c8c870c2b20" name="process-stock-codes-subflow" />
+	</flow></mule>

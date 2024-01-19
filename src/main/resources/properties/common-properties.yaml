@@ -1,0 +1,20 @@
+cnb:
+ application:
+    name:         "cnb-contracts-batch" 
+    version:      "1.0.0"
+ http: 
+   protocol: "HTTP"
+   host: "0.0.0.0"
+   port:  "8081"
+
+stockCode:
+
+ application:
+    name:    "stock-codes-batch" 
+    version:  "1.0.0"
+  
+ http:
+  protocol: "HTTPS"
+  host: "0.0.0.0"
+  private:
+    port: "8091"

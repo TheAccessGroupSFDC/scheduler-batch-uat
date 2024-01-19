@@ -1,0 +1,11 @@
+cnbContractsBatch:
+  clientId: "![TtfUcpSdX9YTYBsTW7OqusbE8PhQyHc2WiYiJ81RSqm3KLCAdSwOhsXBEC/6+6iy]"
+  clientSecret: "![2+s9O2rFJN1MycbLF854MHn1V6bxx1+slWznBuAzRTWZTTzrMBtiD/Y7J6akwqWa]"
+  
+stockCodesBatch:
+  clientId: "![qJxsDecOWG+6cedlxR8AAI8C7kYOUJHs7M+J+XydW8ncDY91t8YwriaVIsoOCIdG]"
+  clientSecret: "![ke/TVqlmSEoIoo8qmwl5L73QFqW9PYwkCu0EC7UU7qJr5Q3pw580qbp75ZBbzGAJ]"
+
+stockCodesDB:  
+  username: "![5IEwbPGmfluQotxjTiaJ9g==]"
+  password: "![MsDeTIG6JMcM2FdBQ7S7Qg==]"
