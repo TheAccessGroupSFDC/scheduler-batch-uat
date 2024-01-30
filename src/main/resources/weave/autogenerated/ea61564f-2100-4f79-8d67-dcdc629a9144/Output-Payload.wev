@@ -1,0 +1,21 @@
+%dw 2.0
+
+type auto_ea61564f_2100_4f79_8d67_dcdc629a9144_Output_Payload = Array<org_mule_runtime_api_message_Message> | {|
+  offset: Number, 
+  limit: Number
+|}
+type org_mule_runtime_api_message_Message = {|
+  payload: Any, 
+  attributes: org_mule_extension_http_api_HttpResponseAttributes
+|} {"typeId": "org.mule.runtime.api.message.Message"}
+type org_mule_extension_http_api_HttpResponseAttributes = {|
+  statusCode: Number, 
+  reasonPhrase: String, 
+  headers: { _?: String }
+|} {"typeAlias": "HttpResponseAttributes",
+"typeId": "org.mule.extension.http.api.HttpResponseAttributes"}
+
+
+
+
+

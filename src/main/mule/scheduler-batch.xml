@@ -9,7 +9,7 @@
 				<fixed-frequency frequency="${cnbContractsBatch.serviceContracts.frequency}" timeUnit="MINUTES"/>
 			</scheduling-strategy>
 		</scheduler>
-		<flow-ref doc:name="Flow Reference batch-cnb-get-contracts" doc:id="5c1d039d-e8c5-462b-9dd5-ca77bf9914d7" name="batch-cnb-get-contracts" />
+		<flow-ref doc:name="Flow Reference batch-cnb-get-contracts" doc:id="5c1d039d-e8c5-462b-9dd5-ca77bf9914d7" name="batch-cnb-get-service-contracts" />
 	</flow>
 		<flow name="stock-codes-batch-scheduler-subflow" doc:id="c48342d2-e539-4a1a-ad9b-24d8b352d9cc" >
 		<scheduler doc:name="Scheduler" doc:id="e3b7a5fe-5ebf-4f20-8db9-9b977e14c752" >
