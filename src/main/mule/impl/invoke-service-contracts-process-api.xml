@@ -115,16 +115,16 @@ payload.contracts map ((item, index) -> {
 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<custom-metrics:send doc:name="Send Success/Errors Service Contracts" doc:id="425c2394-9428-4383-b02c-bdffb091730d" metricName="Contracts">
+		<!-- [STUDIO:"Send Success/Errors Service Contracts"]<custom-metrics:send doc:name="Send Success/Errors Service Contracts" doc:id="425c2394-9428-4383-b02c-bdffb091730d" metricName="Contracts">
 			<custom-metrics:dimensions >
 				<custom-metrics:dimension dimensionName="Type" value="Service_Contract" />
 			</custom-metrics:dimensions>
 			<custom-metrics:facts >
-				<custom-metrics:fact factName="successCount" value="#[payload.successCount]" />
-				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount]" />
-				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount]" />
+				<custom-metrics:fact factName="successCount" value="#[payload.successCount&#93;" />
+				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount&#93;" />
+				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount&#93;" />
 			</custom-metrics:facts>
-		</custom-metrics:send>
+		</custom-metrics:send> [STUDIO] -->
 		<json-logger:logger doc:name="Logger" doc:id="23c8f164-831b-47dd-bc3d-859d41004b7d" config-ref="JSON_Logger_Config_cnb" message="Service Contracts Error Hospital Payload">
 			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
@@ -255,16 +255,16 @@ payload.contracts map ((item, index) -> {
 			</error-handler>
 		</try>
 		<json-logger:logger doc:name="After Contracts" doc:id="d35cd60b-9aa2-4a31-8619-2248639f328c" config-ref="JSON_Logger_Config_cnb" message='#["After Contracts PAPI"]'/>
-		<custom-metrics:send doc:name="Send Success/Errors Contracts" doc:id="72e9b68c-5b29-4dd5-8050-082215d7fbad" metricName="Contracts">
+		<!-- [STUDIO:"Send Success/Errors Contracts"]<custom-metrics:send doc:name="Send Success/Errors Contracts" doc:id="72e9b68c-5b29-4dd5-8050-082215d7fbad" metricName="Contracts">
 			<custom-metrics:dimensions>
 				<custom-metrics:dimension dimensionName="Type" value="Contract" />
 			</custom-metrics:dimensions>
 			<custom-metrics:facts>
-				<custom-metrics:fact factName="successCount" value="#[payload.successCount]" />
-				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount]" />
-				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount]" />
+				<custom-metrics:fact factName="successCount" value="#[payload.successCount&#93;" />
+				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount&#93;" />
+				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount&#93;" />
 			</custom-metrics:facts>
-		</custom-metrics:send>
+		</custom-metrics:send> [STUDIO] -->
 		<choice doc:name="Choice1" doc:id="40bb9ca2-bcae-4acf-b01e-759db4157341" >
 			<when expression="#[(!isEmpty(vars.errorHospitalPayloadCon)) and (sizeOf(vars.errorHospitalPayloadCon) &gt; 0)]" >
 				<json-logger:logger doc:name="Logger" doc:id="c6a5b0a7-4153-48e3-913e-cdc16f8dee51" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored Contract records to Error Hospital, errored records count " ++ sizeOf(vars.errorHospitalPayloadCon)]' tracePoint="FLOW" >
@@ -286,33 +286,33 @@ payload.contracts map ((item, index) -> {
 		</choice>
 	
 </sub-flow>
-	<sub-flow name="service-contract-lines-papi-callout" doc:id="3af52068-3d1b-4ac9-a791-8fc5ab4aa15c" >
-		<json-logger:logger doc:name="Logger" doc:id="e6573a7d-31e8-478c-a054-4225e3af1ddb" config-ref="JSON_Logger_Config_cnb" message='#["Invoking Service Contract Lines PAPI request for " ++ sizeOf(payload) ++ " contract lines"]' >
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+	<sub-flow name="service-contract-lines-papi-callout" doc:id="3af52068-3d1b-4ac9-a791-8fc5ab4aa15c">
+		<json-logger:logger doc:name="Logger" doc:id="e6573a7d-31e8-478c-a054-4225e3af1ddb" config-ref="JSON_Logger_Config_cnb" message='#["Invoking Service Contract Lines PAPI request for " ++ sizeOf(payload) ++ " contract lines"]'>
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<ee:transform doc:name="payload" doc:id="44d69770-6720-4aae-b584-993a09a18acc" >
-			<ee:message >
+		<ee:transform doc:name="payload" doc:id="44d69770-6720-4aae-b584-993a09a18acc">
+			<ee:message>
 			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="startPayload" ><![CDATA[%dw 2.0
+			<ee:variables>
+				<ee:set-variable variableName="startPayload"><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<json-logger:logger doc:name="Before Service Contract Lines" doc:id="043a7ae5-17df-4e99-a60a-e0fbc0dc6c24" message='#["Before Service Contract Lines"]' config-ref="JSON_Logger_Config_cnb">
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<try doc:name="Try Service Contract Lines" doc:id="e1302650-c13b-4883-a026-360151cc598e" >
-			<ee:transform doc:name="Map Payload" doc:id="73297439-bc19-45db-864a-a4a2b8200462" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
+		<try doc:name="Try Service Contract Lines" doc:id="e1302650-c13b-4883-a026-360151cc598e">
+			<ee:transform doc:name="Map Payload" doc:id="73297439-bc19-45db-864a-a4a2b8200462">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
 output application/json skipNullOn="everywhere"
 ---
 payload map (SCLMap) -> {
@@ -353,19 +353,19 @@ payload map (SCLMap) -> {
 				<ee:set-variable resource="dwl/contract-lines-error-hospital-payload.dwl" variableName="errorHospitalPayload" />
 			</ee:variables>
 		</ee:transform>
-			<error-handler >
-				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ce3449df-66b8-414e-8983-07781d124d4a" >
-					<json-logger:logger doc:name="Logger" doc:id="16c805fa-97fb-4424-8d7b-94e3929489de" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored records to Error Hospital"]' tracePoint="EXCEPTION" >
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ce3449df-66b8-414e-8983-07781d124d4a">
+					<json-logger:logger doc:name="Logger" doc:id="16c805fa-97fb-4424-8d7b-94e3929489de" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored records to Error Hospital"]' tracePoint="EXCEPTION">
+						<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 					</json-logger:logger>
-					<ee:transform doc:name="Transform Message" doc:id="53f0c1b2-6b73-4aa6-b68f-ab52eb05c1db" >
-						<ee:message >
+					<ee:transform doc:name="Transform Message" doc:id="53f0c1b2-6b73-4aa6-b68f-ab52eb05c1db">
+						<ee:message>
 						</ee:message>
-						<ee:variables >
-							<ee:set-variable variableName="errorHospitalPayload" ><![CDATA[%dw 2.0
+						<ee:variables>
+							<ee:set-variable variableName="errorHospitalPayload"><![CDATA[%dw 2.0
 output application/json
 ---
 payload map ((item, index) -> {
@@ -385,24 +385,24 @@ payload map ((item, index) -> {
 			</error-handler>
 		</try>
 		<json-logger:logger doc:name="After Service Contract Lines" doc:id="519e8dbf-67fa-43cf-bcdf-95023eaf4ab4" config-ref="JSON_Logger_Config_cnb" message='#["After Service Contract Lines"]'>
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<custom-metrics:send doc:name="Send Number Of Contract Lines" doc:id="7bc66540-a3c2-45b8-9c24-c8f530f2a001" metricName="Contract_Lines">
+		<!-- [STUDIO:"Send Number Of Contract Lines"]<custom-metrics:send doc:name="Send Number Of Contract Lines" doc:id="7bc66540-a3c2-45b8-9c24-c8f530f2a001" metricName="Contract_Lines">
 			<custom-metrics:dimensions>
 				<custom-metrics:dimension dimensionName="Type" value="Service_Contract_Line" />
 			</custom-metrics:dimensions>
 			<custom-metrics:facts>
-				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount]" />
-				<custom-metrics:fact factName="successCount" value="#[payload.successCount]" />
-				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount]" />
-				<custom-metrics:fact factName="Total_Service_Contracts" value="#[sizeOf(payload)]" />
+				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount&#93;" />
+				<custom-metrics:fact factName="successCount" value="#[payload.successCount&#93;" />
+				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount&#93;" />
+				<custom-metrics:fact factName="Total_Service_Contracts" value="#[sizeOf(payload)&#93;" />
 			</custom-metrics:facts>
-		</custom-metrics:send>
+		</custom-metrics:send> [STUDIO] -->
 		<json-logger:logger doc:name="Logger" doc:id="9d9940a5-280d-467e-acd5-a9a35ffbcf95" config-ref="JSON_Logger_Config_cnb" message="Service Contract Lines Error Hospital Payload">
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     errorHospitalPayload: JSONLoggerModule::stringifyNonJSON(vars.errorHospitalPayload) 
 }]]]></json-logger:content>
@@ -410,16 +410,16 @@ payload map ((item, index) -> {
 		<choice doc:name="Choice" doc:id="fb0b6942-bd91-4a7d-b490-2b67f2201dfd">
 			<when expression="#[(!isEmpty(vars.errorHospitalPayload)) and (sizeOf(vars.errorHospitalPayload) &gt; 0)]">
 				<json-logger:logger doc:name="Logger" doc:id="1eee0a91-de99-4d96-9016-1874e8fd09d3" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored records to Error Hospital, errored records count " ++ sizeOf(vars.errorHospitalPayload)]' tracePoint="FLOW">
-					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 				</json-logger:logger>
-				<flow-ref doc:name="Flow Reference invoke-error-hospital-impl-subflow" doc:id="dabc79dd-b74e-431f-ad7d-8ff3405f7e64" name="invoke-error-hospital-impl-subflow"/>
+				<flow-ref doc:name="Flow Reference invoke-error-hospital-impl-subflow" doc:id="dabc79dd-b74e-431f-ad7d-8ff3405f7e64" name="invoke-error-hospital-impl-subflow" />
 			</when>
-			<otherwise >
+			<otherwise>
 				<json-logger:logger doc:name="Logger" doc:id="fa36b2b1-d0b8-4de7-b888-8d60f0eda6b0" config-ref="JSON_Logger_Config_cnb" tracePoint="FLOW" message='#["No records to send to Error Hospital"]'>
-					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
@@ -427,15 +427,15 @@ payload map ((item, index) -> {
 			</otherwise>
 		</choice>
 		<json-logger:logger doc:name="Before Asset Lines" doc:id="1422b2dc-9aa9-4ec1-9017-d58990229731" config-ref="JSON_Logger_Config_cnb" message='#["Before Asset Lines"]'>
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<try doc:name="Try Contract Lines" doc:id="91bbb709-ee39-4e8a-b2c4-4cdaa3cdf516" >
-			<ee:transform doc:name="Map Payload" doc:id="dcc9b164-2827-499b-a873-7ef60ab4256e" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
+		<try doc:name="Try Contract Lines" doc:id="91bbb709-ee39-4e8a-b2c4-4cdaa3cdf516">
+			<ee:transform doc:name="Map Payload" doc:id="dcc9b164-2827-499b-a873-7ef60ab4256e">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
 output application/json skipNullOn="everywhere"
 ---
 vars.startPayload map (SCLMap) -> {
@@ -448,31 +448,31 @@ vars.startPayload map (SCLMap) -> {
     billingType:SCLMap.billing,
     installDate:SCLMap.startDate,
     nextBillingDate:SCLMap.nextBillingDate as Date default null,
-    price:SCLMap.pricePerUnit as Number default null,
+    price:SCLMap.pricePerUnit as Number default 0,
     quantity:SCLMap.quantity,
-    //totalPrice: ???
+    originalStartDate:SCLMap.startDate,
+    usageEndDate:SCLMap.endDate,
     unitPriceFrequency:SCLMap.unitPriceFrequency,
-    //usageEndDate: ???
     assetFamily:SCLMap.productFamily,
-    //originalStartDate: Contract start date, not at line level
     //totalRenewalPrice: ???
-    annualBillingPeriodValue:SCLMap.annualBillingPeriodValue as Number default null,
+    annualBillingPeriodValue:SCLMap.annualBillingPeriodValue as Number default 0,
     stockCode: SCLMap.stockCode,
     status: SCLMap.status 
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-			<until-successful maxRetries="${serviceContractsPAPI.untilsuccessful.serviceContractLines.retries}" doc:name="Until Successful" doc:id="e52b2f24-57b5-4754-abb4-739ac0f02570" millisBetweenRetries="${serviceContractsPAPI.untilsuccessful.serviceContractLines.frequency}" >
-				<http:request method="PATCH" doc:name="Request Send Contract Lines" doc:id="3f126534-bbaa-4246-9e3c-0bbf0dd38860" config-ref="Service_Contract_PAPI_HTTP_Request" path="/assets" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" >
-					<http:headers ><![CDATA[#[output application/java
+			<json-logger:logger doc:name="Logger" doc:id="0bf56fe8-bce4-4226-b7ae-80a48078ec28" config-ref="JSON_Logger_Config_cnb" message='#["Post Lines Payload"]' />
+			<until-successful maxRetries="${serviceContractsPAPI.untilsuccessful.serviceContractLines.retries}" doc:name="Until Successful" doc:id="e52b2f24-57b5-4754-abb4-739ac0f02570" millisBetweenRetries="${serviceContractsPAPI.untilsuccessful.serviceContractLines.frequency}">
+				<http:request method="PATCH" doc:name="Request Send Contract Lines" doc:id="3f126534-bbaa-4246-9e3c-0bbf0dd38860" config-ref="Service_Contract_PAPI_HTTP_Request" path="/assets" sendCorrelationId="ALWAYS" correlationId="#[correlationId]">
+					<http:headers><![CDATA[#[output application/java
 ---
 {
 	"x-source-system" : "C&B"
 }]]]></http:headers>
 				</http:request>
 			</until-successful>
-			<json-logger:logger doc:name="Logger" doc:id="8217bc35-63d6-44f2-834e-8a1c49f7d746" config-ref="JSON_Logger_Config_cnb" message='#["Successfully invoked Service Contract Lines PAPI request"]' tracePoint="AFTER_REQUEST" >
-				<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:logger doc:name="Logger" doc:id="8217bc35-63d6-44f2-834e-8a1c49f7d746" config-ref="JSON_Logger_Config_cnb" message='#["Successfully invoked Service Contract Lines PAPI request"]' tracePoint="AFTER_REQUEST">
+				<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     successCount: payload.successCount,
     errorCount: payload.errorCount,
@@ -480,10 +480,10 @@ vars.startPayload map (SCLMap) -> {
     errorItems: payload.errorItems
 }]]]></json-logger:content>
 			</json-logger:logger>
-			<ee:transform doc:name="Contract Lines Error Hospital Payload" doc:id="48c83794-cc32-4be1-8774-f536d6657459" >
+			<ee:transform doc:name="Contract Lines Error Hospital Payload" doc:id="48c83794-cc32-4be1-8774-f536d6657459">
 				<ee:message />
-				<ee:variables >
-					<ee:set-variable variableName="errorHospitalPayloadCon" ><![CDATA[%dw 2.0
+				<ee:variables>
+					<ee:set-variable variableName="errorHospitalPayloadCon"><![CDATA[%dw 2.0
 import * from dw::core::Strings
 output application/json
 
@@ -507,18 +507,18 @@ else
 				
 </ee:variables>
 			</ee:transform>
-			<error-handler >
-				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="bcc23dd3-dfa2-4fd1-b0c1-ce33bc581c81" >
-					<json-logger:logger doc:name="Logger" doc:id="45c0c935-03ba-4d70-a0c8-77a8e115571a" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored records to Error Hospital"]' tracePoint="EXCEPTION" >
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="bcc23dd3-dfa2-4fd1-b0c1-ce33bc581c81">
+					<json-logger:logger doc:name="Logger" doc:id="45c0c935-03ba-4d70-a0c8-77a8e115571a" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored records to Error Hospital"]' tracePoint="EXCEPTION">
+						<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 					</json-logger:logger>
-					<ee:transform doc:name="Transform Message" doc:id="162a0b1c-d0ee-4f0d-afa4-c30eefb9184b" >
+					<ee:transform doc:name="Transform Message" doc:id="162a0b1c-d0ee-4f0d-afa4-c30eefb9184b">
 						<ee:message />
-						<ee:variables >
-							<ee:set-variable variableName="errorHospitalPayloadCon" ><![CDATA[%dw 2.0
+						<ee:variables>
+							<ee:set-variable variableName="errorHospitalPayloadCon"><![CDATA[%dw 2.0
 output application/json
 ---
 payload map ((item, index) -> {
@@ -539,35 +539,35 @@ payload map ((item, index) -> {
 			</error-handler>
 		</try>
 		<json-logger:logger doc:name="After Assets" doc:id="88ded9a2-0dc4-465f-a4c4-33b15bdf955d" config-ref="JSON_Logger_Config_cnb" message='#["After assets"]'>
-			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
 
 }]]]></json-logger:content>
 		</json-logger:logger>
-		<custom-metrics:send doc:name="Send Number Of Asset Lines" doc:id="e97fc4bd-f844-493c-a23c-7673721821de" metricName="Contract_Lines" >
-			<custom-metrics:dimensions >
+		<!-- [STUDIO:"Send Number Of Asset Lines"]<custom-metrics:send doc:name="Send Number Of Asset Lines" doc:id="e97fc4bd-f844-493c-a23c-7673721821de" metricName="Contract_Lines">
+			<custom-metrics:dimensions>
 				<custom-metrics:dimension dimensionName="Type" value="Asset" />
 			</custom-metrics:dimensions>
-			<custom-metrics:facts >
-				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount]" />
-				<custom-metrics:fact factName="successCount" value="#[payload.successCount]" />
-				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount]" />
-				<custom-metrics:fact factName="totalPayloadSize" value="#[sizeOf(payload)]" />
+			<custom-metrics:facts>
+				<custom-metrics:fact factName="errorCount" value="#[payload.errorCount&#93;" />
+				<custom-metrics:fact factName="successCount" value="#[payload.successCount&#93;" />
+				<custom-metrics:fact factName="totalCount" value="#[payload.totalCount&#93;" />
+				<custom-metrics:fact factName="totalPayloadSize" value="#[sizeOf(payload)&#93;" />
 			</custom-metrics:facts>
-		</custom-metrics:send>
-		<choice doc:name="Choice1" doc:id="2cdc0143-67a5-44bf-874b-59be0a58a054" >
-			<when expression="#[(!isEmpty(vars.errorHospitalPayloadCon)) and (sizeOf(vars.errorHospitalPayloadCon) &gt; 0)]" >
-				<json-logger:logger doc:name="Logger" doc:id="b4c48618-3d31-44d3-a3b0-5ed363dca01a" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored Contract records to Error Hospital, errored records count " ++ sizeOf(vars.errorHospitalPayload)]' tracePoint="FLOW" >
-					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+		</custom-metrics:send> [STUDIO] -->
+		<choice doc:name="Choice1" doc:id="2cdc0143-67a5-44bf-874b-59be0a58a054">
+			<when expression="#[(!isEmpty(vars.errorHospitalPayloadCon)) and (sizeOf(vars.errorHospitalPayloadCon) &gt; 0)]">
+				<json-logger:logger doc:name="Logger" doc:id="b4c48618-3d31-44d3-a3b0-5ed363dca01a" config-ref="JSON_Logger_Config_cnb" message='#["Sending Errored Contract records to Error Hospital, errored records count " ++ sizeOf(vars.errorHospitalPayload)]' tracePoint="FLOW">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 				</json-logger:logger>
 				<flow-ref doc:name="Flow Reference invoke-error-hospital-impl-subflow" doc:id="ad089a83-3fc9-47e7-96de-d42bef74302c" name="invoke-error-hospital-impl-subflowCon" />
 			</when>
-			<otherwise >
-				<json-logger:logger doc:name="Logger" doc:id="5c4a32d1-9a31-4ff4-b9a6-26362b3ed9f3" config-ref="JSON_Logger_Config_cnb" message='#["No Contract records to send to Error Hospital"]' tracePoint="FLOW" >
-					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+			<otherwise>
+				<json-logger:logger doc:name="Logger" doc:id="5c4a32d1-9a31-4ff4-b9a6-26362b3ed9f3" config-ref="JSON_Logger_Config_cnb" message='#["No Contract records to send to Error Hospital"]' tracePoint="FLOW">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
     //payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>

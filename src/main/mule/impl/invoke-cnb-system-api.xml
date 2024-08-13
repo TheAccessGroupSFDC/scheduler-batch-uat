@@ -11,7 +11,7 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 		<json-logger:logger doc:name="Logger" doc:id="1540b2ed-3545-4369-b29c-0b9283049e49" config-ref="JSON_Logger_Config_cnb" message='#["Invoking GET CNB Service Contract request"]'>
 			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
 {
-    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+    payload: JSONLoggerModule::stringifyNonJSON(payload) 
 }]]]></json-logger:content>
 		</json-logger:logger>
 		<try doc:name="Try" doc:id="7e05cc6f-47c9-4184-b350-e2f56ec13586" >

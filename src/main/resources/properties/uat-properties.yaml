@@ -40,7 +40,7 @@ serviceContractsPAPI:
       frequency: "2000" 
   
 cnbContractsBatch:
-  fromDateDiff: "5" # In Minutes
+  fromDateDiff: "7" # In Minutes 7
   toDateDiff: "0" # In Minutes
   serviceContracts:
     parallelThreads: "4"
