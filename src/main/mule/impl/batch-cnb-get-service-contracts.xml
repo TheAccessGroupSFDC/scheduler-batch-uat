@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+
+	
+	
+	<sub-flow name="batch-cnb-get-service-contracts" doc:id="ea61564f-2100-4f79-8d67-dcdc629a9144" >
+<!-- [STUDIO:"Retrieve timeStamp"]		<os:retrieve-all doc:name="Retrieve timeStamp" doc:id="a13d7c20-6318-4dc9-94e1-fc235c6de697" objectStore="TimeStamp_OS" target="timeStamps"/> [STUDIO] -->
+		<json-logger:logger doc:name="Logger" doc:id="b5ec79dc-ed74-4f6f-a059-0e3caeadc56f" config-ref="JSON_Logger_Config_cnb" message='#["Starting batch processing of CNB Contracts"]'>
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<flow-ref doc:name="Set and Retrieve TimeStamp" doc:id="4281b34a-2915-45cc-8b91-8709dccb5f35" name="timestamp-set-and-retrieve-subflow" />
+		<set-variable value="#[now()]" doc:name="Set Variable contractsStartTime" doc:id="57ae7ff6-2e67-4221-a19a-bc66537bb68a" variableName="contractsStartTime"/>
+		<set-variable value="#[1 as Number]" doc:name="Set Variable offset" doc:id="0c67b20d-d324-4d27-8263-b88438eb251f" variableName="offset" />
+		<set-variable value="#[100 as Number]" doc:name="Set Variable limit" doc:id="c0d6cc55-dc8b-452a-bde7-8741f4e06239" variableName="limit" />
+		<flow-ref doc:name="CNB Service Contracts Callout" doc:id="7a6bb0c5-7bc3-4fa4-bed4-bd28ec732a77" name="cnb-get-contracts-callout-subflow" />
+		<ee:transform doc:name="Transform Message" doc:id="9970cc7c-f9d2-46bb-b6e6-dbe6c59af83d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="initialResponseMetaInformation" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+   "currentPage": payload.currentPage, 
+   "totalPages": payload.totalPages, 
+   "hasNextPage": payload.hasNextPage, 
+   "hasPreviousPage": payload.hasPreviousPage,
+   "contractsRetrieved": if(!isEmpty(payload.contracts)) sizeOf(payload.contracts) else 0
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="f8dfdd1a-faa1-4ca1-ab09-c2cc7b439f13" config-ref="JSON_Logger_Config_cnb" message='#["Service Contracts Meta Information after retrieving for fromDate: " ++ vars.fromDate ++ " toDate: " ++ vars.toDate]' tracePoint="AFTER_REQUEST">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    serviceContractsMetaInfo: JSONLoggerModule::stringifyNonJSON(vars.initialResponseMetaInformation) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<set-variable value="#[payload.hasNextPage]" doc:name="Set Variable has next page" doc:id="fceff11c-f221-404c-bba7-5ef87cd8c57d" variableName="hasNextPage" />
+				<choice doc:name="If Contracts Updated" doc:id="9812a0f5-85ad-4472-8bd3-01e88fdcea7f" >
+			<when expression="#[sizeOf(payload.contracts) &gt; 0]">
+				<flow-ref doc:name="Service Contracts PAPI callout" doc:id="90a20993-24e7-453f-928c-3c21d457a7b3" name="service-contract-papi-callout" />
+			</when>
+			<otherwise >
+				<json-logger:logger doc:name="Logger" doc:id="42d73f8d-c115-48b7-b13a-5e58027b5cd3" config-ref="JSON_Logger_Config_cnb" message="No Contracts changed" tracePoint="AFTER_TRANSFORM">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	startTime: vars.contractsStartTime,
+	endTime: now(),
+	executionTime: now() - vars.contractsStartTime
+}]]]></json-logger:content>
+				</json-logger:logger>
+			</otherwise>
+		</choice>
+		<choice doc:name="Check for next page" doc:id="4132e938-6851-41ad-8cd8-3f2a987e2895" >
+			<when expression="#[vars.hasNextPage == true]" >
+				<ee:transform doc:name="Transform Message" doc:id="226b60a8-c1e9-42db-8647-620d04c21385">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="totalPagesOffsets" ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.initialResponseMetaInformation.totalPages > 1)
+    (2 to vars.initialResponseMetaInformation.totalPages) map {
+        offset: $,
+        limit: 100
+    }
+else
+    {}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<json-logger:logger doc:name="Logger" doc:id="3276a3aa-6840-4c25-a9b2-0bf316cd7968" config-ref="JSON_Logger_Config_cnb" message='#["Service Contracts: Total Pages to process: " ++ sizeOf(vars.totalPagesOffsets)]' tracePoint="FLOW">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<parallel-foreach doc:name="Parallel For Each" doc:id="9a0507f8-c848-4f6b-8c49-46a1e3556877" collection="#[vars.totalPagesOffsets]" maxConcurrency="${cnbContractsBatch.serviceContracts.parallelThreads}">
+					<flow-ref doc:name="Flow Reference batch-cnb-get-contractsFlow" doc:id="39e7dff6-8b21-414d-b362-14dba522b2b4" name="batch-cnb-get-service-contractsFlow"/>
+				</parallel-foreach>
+			</when>
+			<otherwise>
+				<json-logger:logger doc:name="Logger" doc:id="bd3c4158-908c-4ff8-9b8a-9a9ca6d966c0" config-ref="JSON_Logger_Config_cnb" message='#["Finished batch processing of CNB Contracts"]' tracePoint="END">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	startTime: vars.contractsStartTime,
+	endTime: now(),
+	executionTime: now() - vars.contractsStartTime
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<flow-ref doc:name="Flow Reference batch-cnb-get-contract-lines" doc:id="34975d36-052c-4e9a-abf5-37b776e083f0" name="batch-cnb-get-service-contract-lines"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+
+	<sub-flow name="batch-cnb-get-service-contractsFlow" doc:id="6e8b537e-0e89-40c5-9e71-541de33bf2ce" >
+		<json-logger:logger doc:name="Logger" doc:id="a6ff2b5e-34a4-4168-900e-003ee996cdb5" config-ref="JSON_Logger_Config_cnb" message='#["Received Service Contracts VM Message with offset " ++ payload.offset]'>
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<set-variable value="#[payload.offset]" doc:name="Initalize offset" doc:id="a23581cb-68c2-42f0-806e-377e6c46c4d5" variableName="offset" />
+		<set-variable value="#[payload.limit]" doc:name="Set Variable Limit" doc:id="e9facd56-e28f-48b6-b39c-c5125acd74fd" variableName="limit"/>
+		<flow-ref doc:name="Set and Retrieve TimeStamp" doc:id="1d8ea477-1543-4e7f-9f38-3d955f5785d7" name="timestamp-set-and-retrieve-subflow" />
+		<flow-ref doc:name="CNB Service Contracts Callout" doc:id="81d12e5f-9190-4be2-8d37-07d4fe69efd9" name="cnb-get-contracts-callout-subflow" />
+		<set-variable value="#[payload.hasNextPage]" doc:name="Set Variable has next page" doc:id="d3267e45-9c64-41eb-a5db-f6e3ea28f1be" variableName="hasNextPage" />
+		<flow-ref doc:name="Service Contracts PAPI callout" doc:id="9e286233-f5c5-4dd2-aa41-e2cb251e8748" name="service-contract-papi-callout" />
+		<choice doc:name="Check for next page" doc:id="69a34f5b-6472-4c7e-8b59-80ee6117926f" >
+			<when expression="#[vars.hasNextPage == true]" >
+				<json-logger:logger doc:name="Logger" doc:id="40b9c6a7-c061-4652-a2b7-ea0ce856e7ac" config-ref="JSON_Logger_Config_cnb" message="There are more contracts to be processed.." priority="DEBUG">
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+			</when>
+			<otherwise >
+				<json-logger:logger doc:name="Logger" doc:id="7e812db6-b08d-48a8-a9b6-8fd3af28d7ae" config-ref="JSON_Logger_Config_cnb" message='#["Finished batch processing of CNB Contracts"]' tracePoint="END">
+					<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	startTime: vars.contractsStartTime,
+	endTime: now(),
+	executionTime: now() - vars.contractsStartTime
+}]]]></json-logger:content>
+				</json-logger:logger>
+				<flow-ref doc:name="Flow Reference batch-cnb-get-contract-lines" doc:id="60cbc7d4-5d62-4eba-97ef-e00fe96f9016" name="batch-cnb-get-service-contract-lines"/>
+				<json-logger:logger doc:name="Logger" doc:id="7ff11fd5-45f9-44cb-88b4-2706f45888a7" config-ref="JSON_Logger_Config_cnb" message='#["Started batch processing of CNB Contract Lines"]' >
+					<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+				</json-logger:logger>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	
+	<sub-flow name="cnb-get-contracts-callout-subflow" doc:id="f0b9ce1f-8da9-4269-93a8-af3206e61969" >
+		<json-logger:logger doc:name="Logger" doc:id="1540b2ed-3545-4369-b29c-0b9283049e49" config-ref="JSON_Logger_Config_cnb" message='#["Invoking GET CNB Service Contract request"]'>
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<try doc:name="Try" doc:id="7e05cc6f-47c9-4184-b350-e2f56ec13586" >
+			<until-successful maxRetries="${cnbSystemAPI.untilsuccessful.serviceContracts.retries}" doc:name="Until Successful" doc:id="e6ee205e-e65d-411b-96f7-43d51d482b1b" millisBetweenRetries="${cnbSystemAPI.untilsuccessful.serviceContracts.frequency}">
+			<http:request method="GET" doc:name="Request Get Contracts" doc:id="46e36db8-332e-4bf9-bf7a-95da12a73963" config-ref="CNB_System_API_HTTP_Request" path="${cnbSystemAPI.resources.serviceContracts}" sendCorrelationId="ALWAYS" correlationId="#[correlationId]">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	"offset" : (vars.offset),
+	"fromDate" : (vars.fromDate),
+	"limit" : (vars.limit),
+	"toDate" : (vars.toDate)
+}]]]></http:query-params>
+			</http:request>
+		</until-successful>
+			<json-logger:logger doc:name="Logger" doc:id="227de8f6-23d7-44ec-b121-f3e5b1e817d4" config-ref="JSON_Logger_Config_cnb" message='#["Successfully invoked GET CNB Service Contract request"]'>
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	"currentPage": payload.currentPage,
+  	"totalPages": payload.totalPages,
+  	"hasNextPage": payload.hasNextPage,
+  	"hasPreviousPage": payload.hasPreviousPage
+}]]]></json-logger:content>
+		</json-logger:logger>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ec3b6a22-0f28-419b-a335-715200869d05" >
+					<json-logger:logger doc:name="Logger" doc:id="d14ad46a-97db-4bd0-8845-0d9278ce71ed" config-ref="JSON_Logger_Config_cnb" message='#["***CRITICAL ERROR*** - Unable to fetch service contracts data from CNB API"]' tracePoint="EXCEPTION">
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</sub-flow>
+	
+	<sub-flow name="cnb-get-contract-lines-callout-subflow" doc:id="30394947-1150-43fd-b821-e0dfb9159082" >
+		<json-logger:logger doc:name="Logger" doc:id="03ffca08-859a-4c9f-b9a1-cf814853f9e7" config-ref="JSON_Logger_Config_cnb" message='#["Invoking GET CNB Service Contract lines request"]' tracePoint="BEFORE_REQUEST">
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<try doc:name="Try" doc:id="6c38df27-fc77-44a5-990b-2ff55dea5da7" >
+			<until-successful maxRetries="${cnbSystemAPI.untilsuccessful.serviceContractLines.retries}" doc:name="Until Successful" doc:id="6677efe2-7604-455e-b6ea-fb071460f4fe" millisBetweenRetries="${cnbSystemAPI.untilsuccessful.serviceContractLines.frequency}">
+			<http:request method="GET" doc:name="Request Get Contract Lines" doc:id="28df7ae4-9a37-4e90-b33f-ca4be3f15fd7" config-ref="CNB_System_API_HTTP_Request" path="${cnbSystemAPI.resources.serviceContractLines}" sendCorrelationId="ALWAYS" correlationId="#[correlationId]">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	"offset" : (vars.offset),
+	"fromDate" : (vars.fromDate),
+	"limit" : (vars.limit),
+	"toDate" : (vars.toDate)
+}]]]></http:query-params>
+			</http:request>
+		</until-successful>
+			<json-logger:logger doc:name="Logger" doc:id="38b89df0-12fb-4362-b5f9-4bafd482d15e" config-ref="JSON_Logger_Config_cnb" message='#["Successfully invoked GET CNB Service Contract lines request"]' tracePoint="AFTER_REQUEST">
+			<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+	"currentPage": payload.currentPage,
+  	"totalPages": payload.totalPages,
+  	"hasNextPage": payload.hasNextPage,
+  	"hasPreviousPage": payload.hasPreviousPage
+}]]]></json-logger:content>
+		</json-logger:logger>
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="cfed7b22-f531-4112-b269-382a2a0422a3" >
+					<json-logger:logger doc:name="Logger" doc:id="3083ed2b-5426-40a2-80a9-9f84885d752f" config-ref="JSON_Logger_Config_cnb" message='#["***CRITICAL ERROR*** - Unable to fetch service contract lines data from CNB API"]' tracePoint="EXCEPTION" >
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	
+</sub-flow>
+	</mule>

@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_3af52068_3d1b_4ac9_a791_8fc5ab4aa15c_Output_Variables_errorHospitalPayloadCon = Any
+

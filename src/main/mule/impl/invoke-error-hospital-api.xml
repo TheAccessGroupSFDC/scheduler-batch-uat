@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+	<sub-flow name="invoke-error-hospital-impl-subflow" doc:id="d9a98080-09e2-42c5-9540-85977c45e31f" >
+		<json-logger:logger doc:name="Logger" doc:id="4630535a-7c89-4f0a-a0c3-7fcd4c4fb07f" config-ref="JSON_Logger_Config_cnb" message="Invoking Error Hospital API" tracePoint="BEFORE_REQUEST">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<try doc:name="Try" doc:id="52e99dd8-a733-4e47-81a7-bfdf97d86b6e" >
+			<http:request method="POST" doc:name="Call Error Hospital" doc:id="e90e284b-139e-4b7a-a7a0-01ef4cb1535b" config-ref="SFDC_Error_Hoaspital" path="/${sfdcerrorHospitalAPI.resources.errorHospital}" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" >
+				<http:body ><![CDATA[#[vars.errorHospitalPayload]]]></http:body>
+			</http:request>
+			<json-logger:logger doc:name="Logger" doc:id="3bfb6924-3850-4699-b760-6ad62ab1311e" config-ref="JSON_Logger_Config_cnb" message="Successfully invoked Error Hospital API" tracePoint="AFTER_REQUEST" >
+				<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+			</json-logger:logger>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d06d2a2a-204a-4327-94c3-c765d7f2645b" >
+					<json-logger:logger doc:name="Logger" doc:id="b1dd0998-4e73-44dd-b672-de6afaf23bb9" config-ref="JSON_Logger_Config_cnb" message='"***Urgent Error Hospital Stopped Responding For CNB Contracts Batch***"' />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="d75cb0bd-2d13-413d-9bac-408705701490" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="errorHospitalPayload" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="invoke-error-hospital-impl-subflowCon" doc:id="5214e481-b8c8-4f95-94dc-65f2ce7dc1d1" >
+		<json-logger:logger doc:name="Logger" doc:id="73879d5d-0b3a-441d-8590-c5eeca78f6c3" config-ref="JSON_Logger_Config_cnb" message="Invoking Error Hospital API" tracePoint="BEFORE_REQUEST" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<try doc:name="Try" doc:id="781e33f0-e329-4b06-9d6a-b395ba119ffc" >
+			<http:request method="POST" doc:name="Call Error Hospital" doc:id="563ed554-ad28-4b49-bf76-573dd258f02b" config-ref="SFDC_Error_Hoaspital" path="/${sfdcerrorHospitalAPI.resources.errorHospital}" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" >
+				<http:body ><![CDATA[#[vars.errorHospitalPayloadCon]]]></http:body>
+			</http:request>
+			<json-logger:logger doc:name="Logger" doc:id="83fa37c6-9f05-452c-a74d-e65c864d897b" config-ref="JSON_Logger_Config_cnb" message="Successfully invoked Error Hospital API" tracePoint="AFTER_REQUEST" >
+				<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    //payload: JSONLoggerModule::stringifyNonJSON(payload) 
+}]]]></json-logger:content>
+			</json-logger:logger>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="aa7f6843-7d8c-47aa-b0b2-520de6171f77" >
+					<json-logger:logger doc:name="Logger" doc:id="c1a132aa-c542-46e9-899a-5c8630de34f7" config-ref="JSON_Logger_Config_cnb" message='"***Urgent Error Hospital Stopped Responding For CNB Contracts Batch***"' />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="c498a980-400b-46b0-b65d-d699c12fc93d" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="errorHospitalPayloadCon" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	
+	</mule>

@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_3af52068_3d1b_4ac9_a791_8fc5ab4aa15c_Input_Variables_toDate = java_io_Serializable | Null | String {"format": "yyyy-MM-dd'T'HH:mm:ss'Z'"}
+type java_io_Serializable = {|  |} {"typeAlias": "Serializable",
+"typeId": "java.io.Serializable"}
+
+
+

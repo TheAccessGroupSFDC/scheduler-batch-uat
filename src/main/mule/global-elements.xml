@@ -34,8 +34,8 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 		</http:default-headers>
 	
 </http:request-config>
-	<global-property doc:name="Global Property" doc:id="55cd7632-2b84-41d4-96db-8e4e3747f49f" name="mule.env" value="uat" />
-	<global-property doc:name="Global Property" doc:id="52ce340c-3633-4ccf-bbfa-3422d47dcd8d" name="mule.encryption.key" value="AccessGroup12345" />
+	<global-property doc:name="Global Property" doc:id="55cd7632-2b84-41d4-96db-8e4e3747f49f" name="mule.env" value="prod" />
+	<global-property doc:name="Global Property" doc:id="52ce340c-3633-4ccf-bbfa-3422d47dcd8d" name="mule.encryption.key" value="SPJEPtauAqML6Vgr" />
 	<configuration-properties doc:name="Configuration properties" doc:id="2cf5b59e-7e38-43b4-af0a-99d3d47a3d20" file="properties\common-properties.yaml" />
 	<configuration-properties doc:name="Configuration properties" doc:id="339326b0-5a5c-4b15-860c-fb2ab811d208" file="properties/${mule.env}-properties.yaml" />
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0cee177a-efc6-4a59-ad07-1665f395e248" file="properties/${mule.env}-secure-properties.yaml" key="${mule.encryption.key}" />
