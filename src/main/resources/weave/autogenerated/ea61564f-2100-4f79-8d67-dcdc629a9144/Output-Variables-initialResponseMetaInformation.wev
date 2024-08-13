@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_ea61564f_2100_4f79_8d67_dcdc629a9144_Output_Variables_initialResponseMetaInformation = {|
+  contractLinesRetrieved?: Number, 
+  contractsRetrieved?: Number, 
+  currentPage: Null, 
+  hasNextPage: Null, 
+  hasPreviousPage: Null, 
+  totalPages: Null
+|}
+

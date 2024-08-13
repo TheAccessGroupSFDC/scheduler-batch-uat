@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	
+		<sub-flow name="timestamp-set-and-retrieve-subflow" doc:id="475c1f56-d005-4d04-9891-6e42b68df925" >
+		<os:retrieve-all doc:name="Retrieve timeStamp" doc:id="7e43d9a6-5170-46ab-a7e1-1a42ba6f7020" objectStore="TimeStamp_OS" target="timeStamps" />
+		<choice doc:name="Check for TimeStamp" doc:id="7cea6696-8d1f-40fd-b273-235b03d6c60b">
+			<when expression="#[vars.timeStamps.fromDate != null]">
+				<set-variable value="#[vars.timeStamps.fromDate]" doc:name="Read fromDate from OS" doc:id="ec462a23-82ea-4c2b-a42b-7d3a4a206dec" variableName="fromDate" />
+				<set-variable value="#[vars.timeStamps.toDate]" doc:name="Read toDate from OS" doc:id="97ef7df2-7d3b-45cb-ab3f-82d27a1fc682" variableName="toDate" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="eec5756b-5373-4058-92bf-d67049c8a93f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+
+var toDateDiff = p("cnbContractsBatch.toDateDiff")
+var fromDateDiff = p("cnbContractsBatch.fromDateDiff")
+
+
+var toDate = ((now() >> 'UTC') as DateTime {format: "yyyy-mm-dd'T'hh.mm.ss'Z'"}) - ("PT$(toDateDiff)M" as Period)
+var fromDate = ((now() >> 'UTC') as DateTime {format: "yyyy-mm-dd'T'hh.mm.ss'Z'"}) - ("PT$(fromDateDiff)M" as Period)
+---
+{
+  toDate: toDate as String { format: "yyyy-MM-dd'T'HH:mm:ss'Z'" },
+  fromDate: fromDate as String { format: "yyyy-MM-dd'T'HH:mm:ss'Z'" }
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+					</ee:variables>
+				</ee:transform>
+				<os:store doc:name="Store fromDate" doc:id="37e1fced-5b98-445e-a304-6051be3422aa" key="fromDate" objectStore="TimeStamp_OS">
+					<os:value><![CDATA[#[payload.fromDate]]]></os:value>
+				</os:store>
+				<set-variable value="#[payload.fromDate]" doc:name="Set Variable fromDate" doc:id="1220218b-b6b3-41d1-8b84-840cf00e034d" variableName="fromDate" />
+				<set-variable value="#[payload.toDate]" doc:name="Set Variable toDate" doc:id="4d6159f0-0cbb-4089-ba09-37aaafb7fa75" variableName="toDate" />
+				<os:store doc:name="Store toDate" doc:id="05871ba2-66bb-4f90-ad8a-1f170e97f523" key="toDate" objectStore="TimeStamp_OS">
+					<os:value><![CDATA[#[payload.toDate]]]></os:value>
+				</os:store>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	</mule>
