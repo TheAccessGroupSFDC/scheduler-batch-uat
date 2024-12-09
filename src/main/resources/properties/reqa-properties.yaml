@@ -1,0 +1,124 @@
+json.logger:
+  disabledFields: ""
+  
+cnbSystemAPI:
+  host: "cnb-contracts-sapi-renew-c8j3lw.pa977o.gbr-e1.cloudhub.io"
+  port: "443"
+  basePath: "/api"
+  responseTimeout: "20000"
+  resources:
+    serviceContracts: "/contracts"
+    serviceContractLines: "/contract-lines"
+  reconnection:
+    attempts: "2"
+    frequency: "2000"
+  untilsuccessful:
+    serviceContracts:
+      retries: "2"
+      frequency: "2000"
+    serviceContractLines:
+      retries: "2"
+      frequency: "2000" 
+    
+serviceContractsPAPI:
+  host: "service-contracts-papi-uat-k7qmu8.pa977o.gbr-e1.cloudhub.io"
+  port: "443"
+  basePath: "/api"
+  resources:
+    serviceContracts: "/service-contracts"
+    serviceContractLines: "/service-contract-lines"
+  responseTimeout: "20000"
+  reconnection:
+    attempts: "2"
+    frequency: "2000"
+  untilsuccessful:
+    serviceContracts:
+      retries: "2"
+      frequency: "2000"
+    serviceContractLines:
+      retries: "2"
+      frequency: "2000" 
+  
+cnbContractsBatch:
+  fromDateDiff: "7" # In Minutes 7
+  toDateDiff: "0" # In Minutes
+  serviceContracts:
+    parallelThreads: "4"
+    parallelVMConsumers: "4"
+    batchSize: "100"
+    frequency: "5" # In Minutes
+  serviceContractsLines:
+    parallelThreads: "4"
+    parallelVMConsumers: "4"
+    batchSize: "100"
+  vmQueues:
+    serviceContracts: "vmContractQueue"
+    serviceContractLines: "vmContractLineStart" 
+api:
+  autodiscovery:
+    id: "16520548"
+ 
+tls.keystore:
+  type:         "jks"
+  path:         "keystore/keystore.jks"
+  alias:        "mule"
+  password:     "password"
+  keyPassword:  "password"
+  
+stockCodesDB:
+  host: "thsSQL1.uk.access-accounts.com"
+  port: "1433"
+  databaseName: "Accounts"
+  useSSL: "false"
+  requireSSL: "false"
+  verifyServerCertificate: "false"
+  encrypt: "false" 
+  untilSucessful:
+    maxRetry: "3"
+    retryTime: "1000"
+  reconnection:
+    frequency: "2000"
+    attempts: "2"
+  connection:
+    pooling:
+      maxPoolSize: "15"
+      minPoolSize: "10"
+  
+sfdcServiceContractAPI:
+  host: "salesforce-service-contract-sapi-uat-k7qmu8.pa977o.gbr-e1.cloudhub.io"
+  port: "443"
+  basePath: "/api"
+  resources:
+    stockCodes: "/stock-codes"
+  responseTimeout: "30000"
+  reconnection:
+    frequency: "2000"
+    attempts: "2"
+  untilSucessful:
+    maxRetry: "3"
+    retryTime: "3000"
+  
+  
+
+    
+sfdcerrorHospitalAPI:
+  host: "error-hospital-sapi-uat-k7qmu8.pa977o.gbr-e1.cloudhub.io"
+  port: "443"
+  basePath: "/api"
+  resources:
+    errorHospital: "errors"
+  responseTimeout: "30000"
+  reconnection:
+    frequency: "2000"
+    attempts: "2"
+  untilSucessful:
+    maxRetry: "3"
+    retryTime: "3000"
+  
+stockCodesBatch:
+  batchSize: "150"
+  concurrency: "4"
+  scheduler:
+    frequency: "15" # Minutes
+    startDelay: "0" # Minutes
+    
